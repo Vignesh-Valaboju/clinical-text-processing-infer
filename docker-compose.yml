@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  inference:
+    build:
+      context: .
+      args:
+        - USE_GPU=${USE_GPU:-0}  # Default to CPU, set to 1 for GPU
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - model-cache:/root/.cache/huggingface  # Cache HF models
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_GPU=${USE_GPU:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+              # Only applied when USE_GPU=1
+    mem_swappiness: 60
+    mem_limit: 8g
+    memswap_limit: 16g
+
+volumes:
+  model-cache:  # Persistent volume for model storage 
